@@ -8,7 +8,7 @@ public class RssItem {
     Long id;
 
 
-    RssChannel channel;
+//    RssChannel channel;
 
     String author;
 
@@ -30,6 +30,22 @@ public class RssItem {
     public RssItem() {
     }
 
+    @Override
+    public String toString() {
+        return "RssItem{" +
+                "id=" + id +
+                ", author='" + author + '\'' +
+                ", description='" + description + '\'' +
+                ", content='" + content + '\'' +
+                ", link='" + link + '\'' +
+                ", publishedDate=" + publishedDate +
+                ", title='" + title + '\'' +
+                ", updatedDate=" + updatedDate +
+                ", uri='" + uri + '\'' +
+                '}';
+    }
+
+/*
     public RssChannel getChannel() {
         return channel;
     }
@@ -37,6 +53,7 @@ public class RssItem {
     public void setChannel(RssChannel channel) {
         this.channel = channel;
     }
+*/
 
     public Long getId() {
         return id;
