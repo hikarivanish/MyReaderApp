@@ -1,6 +1,8 @@
 package me.s4h.myreaderapp;
 
 import android.app.Application;
+import android.content.Context;
+import android.content.SharedPreferences;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.DeserializationFeature;
@@ -14,8 +16,10 @@ import java.net.CookieManager;
 import java.net.CookiePolicy;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.util.List;
 
 import me.s4h.myreaderapp.entity.Page;
+import me.s4h.myreaderapp.entity.RssChannel;
 import me.s4h.myreaderapp.entity.RssItem;
 
 /**
@@ -23,10 +27,29 @@ import me.s4h.myreaderapp.entity.RssItem;
  */
 public class MyReaderApplication extends Application implements ReaderService {
     private static final String MYREADER_HOST = "reader.hikarivanish.me:8080";
-    private static final String SHARED_COOKIE = "cookie";
-
+    private static final String PRE_LOGIN = "pre_login";
     ObjectMapper mapper = new ObjectMapper();
 
+    @Override
+    public String getSavedUsername() {
+        SharedPreferences sh = getSharedPreferences(PRE_LOGIN, Context.MODE_PRIVATE);
+        return sh.getString("username", null);
+    }
+
+    @Override
+    public String getSavedPassword() {
+        SharedPreferences sh = getSharedPreferences(PRE_LOGIN, Context.MODE_PRIVATE);
+        return sh.getString("password", null);
+    }
+
+    @Override
+    public void saveLogin(String username, String password) {
+        SharedPreferences sh = getSharedPreferences(PRE_LOGIN, Context.MODE_PRIVATE);
+        SharedPreferences.Editor editor = sh.edit();
+        editor.putString("username", username);
+        editor.putString("password", password);
+        editor.commit();
+    }
 
     @Override
     public boolean login(String username, String password) {
@@ -40,6 +63,7 @@ public class MyReaderApplication extends Application implements ReaderService {
                 urlConnection.setDoOutput(true);
                 urlConnection.getOutputStream().write(("username=" + username + "&password=" + password).getBytes());
                 InputStream in = new BufferedInputStream(urlConnection.getInputStream());
+                return urlConnection.getURL().getPath().equals("/reader");
             } finally {
                 urlConnection.disconnect();
             }
@@ -52,25 +76,7 @@ public class MyReaderApplication extends Application implements ReaderService {
 
 
     @Override
-    public Page<RssItem> retreiveItem(Long channelId, int page, int pageSize) {
-/*        URL url = null;
-        try {
-            url = new URL("http://" + MYREADER_HOST + "/rssChannel/" + channelId
-                    + "/items?sort=publishedDate,desc&size=" + pageSize + "&page=" + page);
-            HttpURLConnection urlConnection = (HttpURLConnection) url.openConnection();
-            try {
-                InputStream in = new BufferedInputStream(urlConnection.getInputStream());
-                mapper.disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
-                return mapper.readValue(in, new TypeReference<Page<RssItem>>() {
-                });
-            } finally {
-                urlConnection.disconnect();
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
-        } finally {
-        }*/
-
+    public Page<RssItem> retrieveItem(Long channelId, int page, int pageSize) {
         mapper.disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
         try {
             return mapper.readValue(new URL("http://" + MYREADER_HOST + "/rssChannel/" + channelId
@@ -86,4 +92,17 @@ public class MyReaderApplication extends Application implements ReaderService {
     }
 
 
+    @Override
+    public List<RssChannel> retrieveChannels() {
+        mapper.disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
+        try {
+            return mapper.readValue(new URL("http://" + MYREADER_HOST + "/user/channels")
+                    , new TypeReference<List<RssChannel>>() {
+            });
+        } catch (IOException e) {
+            e.printStackTrace();
+        } finally {
+        }
+        return null;
+    }
 }

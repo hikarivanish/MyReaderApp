@@ -25,6 +25,10 @@ public class RssChannel {
 
     Date publishedDate;
 
+    @Override
+    public String toString() {
+        return this.title;
+    }
 
     public Date getLastUpdate() {
         return lastUpdate;
